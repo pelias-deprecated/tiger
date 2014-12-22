@@ -2,27 +2,41 @@
  * @file Entry-point script for the TIGER import pipeline.
  */
 
+'use strict';
+
+var fs = require( 'fs' );
+var path = require( 'path' );
+
 var through = require( 'through2' );
+var combinedStream = require( 'combined-stream' );
 var peliasDbclient = require( 'pelias-dbclient' );
 var peliasSuggesterPipeline = require( 'pelias-suggester-pipeline' );
-var shapefileStream = require( 'shapefile-stream' );
 
-function createRecordStream( filePath ){
-  return shapefileStream.createReadStream( filePath );
-}
+var createRecordStream = require( './lib/create_record_stream' );
 
+/**
+ * Import all TIGER files in a directory.
+ *
+ * @param {string} dirPath The path of a directory whose top-level will be
+ *    searched for files with an `shp` extension, which will then be imported
+ *    into Pelias.
+ */
 function importTigerDir( dirPath ){
   var recordStream = combinedStream.create();
   fs.readdirSync( dirPath ).forEach( function forEach( filePath ){
     if( filePath.match( /.shp/ ) ){
       console.error( 'Creating read stream for: ' + filePath );
-      var fullPath = dirPath.join( dirPath, filePath );
+      var fullPath = path.join( dirPath, filePath );
       recordStream.append( function ( next ){
         next( createRecordStream( fullPath ) );
       });
     }
   });
-  recordStream.pipe( createPeliasElasticsearchPipeline() );
+  recordStream.pipe( through.obj(function( a,b,c ){
+    console.log( JSON.stringify( a ) );
+    c(  );
+  }) )
+  // recordStream.pipe( createPeliasElasticsearchPipeline() );
 }
 
 /**
