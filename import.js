@@ -5,9 +5,24 @@
 var through = require( 'through2' );
 var peliasDbclient = require( 'pelias-dbclient' );
 var peliasSuggesterPipeline = require( 'pelias-suggester-pipeline' );
+var shapefileStream = require( 'shapefile-stream' );
 
-function importTigerDir( path ){
-  console.log( 'Importing: ', path );
+function createRecordStream( filePath ){
+  return shapefileStream.createReadStream( filePath );
+}
+
+function importTigerDir( dirPath ){
+  var recordStream = combinedStream.create();
+  fs.readdirSync( dirPath ).forEach( function forEach( filePath ){
+    if( filePath.match( /.shp/ ) ){
+      console.error( 'Creating read stream for: ' + filePath );
+      var fullPath = dirPath.join( dirPath, filePath );
+      recordStream.append( function ( next ){
+        next( createRecordStream( fullPath ) );
+      });
+    }
+  });
+  recordStream.pipe( createPeliasElasticsearchPipeline() );
 }
 
 /**
