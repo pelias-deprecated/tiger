@@ -11,6 +11,7 @@ var through = require( 'through2' );
 var combinedStream = require( 'combined-stream' );
 var peliasDbclient = require( 'pelias-dbclient' );
 var peliasSuggesterPipeline = require( 'pelias-suggester-pipeline' );
+var addressDeduplicatorStream = require( 'address-deduplicator-stream' );
 
 var createRecordStream = require( './lib/create_record_stream' );
 
@@ -28,15 +29,13 @@ function importTigerDir( dirPath ){
       console.error( 'Creating read stream for: ' + filePath );
       var fullPath = path.join( dirPath, filePath );
       recordStream.append( function ( next ){
-        next( createRecordStream( fullPath ) );
+        next( createRecordStream.create( fullPath ) );
       });
     }
   });
-  recordStream.pipe( through.obj(function( a,b,c ){
-    console.log( JSON.stringify( a ) );
-    c(  );
-  }) )
-  // recordStream.pipe( createPeliasElasticsearchPipeline() );
+  recordStream
+    .pipe( addressDeduplicatorStream() )
+    .pipe( createPeliasElasticsearchPipeline() );
 }
 
 /**
