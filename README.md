@@ -1,4 +1,6 @@
 # WIP
+
+[![Greenkeeper badge](https://badges.greenkeeper.io/pelias/tiger.svg)](https://greenkeeper.io/)
 This importer isn't yet ready for developer use. Here be dragons.
 
 # TIGER import pipeline
